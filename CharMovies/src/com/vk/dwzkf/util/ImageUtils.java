@@ -2,7 +2,6 @@ package com.vk.dwzkf.util;
 
 import com.vk.dwzkf.animation.Animation;
 import com.vk.dwzkf.animation.Image;
-import com.vk.dwzkf.screen.Screen;
 
 import java.util.Arrays;
 import java.util.List;
@@ -144,7 +143,7 @@ public class ImageUtils {
                         "   | |    \n" +
                         "   | |    ");
         strings.stream().forEach(s -> animation.addImage(imageFromString(s)));
-        for (int i = strings.size()-1; i>=0; i--) {
+        for (int i = strings.size() - 1; i >= 0; i--) {
             animation.addImage(imageFromString(strings.get(i)));
         }
         return animation;
@@ -153,10 +152,10 @@ public class ImageUtils {
     public static Animation getAnimationSnow() {
         Animation animation = new Animation();
         List<String> list = Arrays.asList(" *    \n" +
-                "      \n" +
-                "      \n" +
-                "      \n" +
-                "______",
+                        "      \n" +
+                        "      \n" +
+                        "      \n" +
+                        "______",
                 " |    \n" +
                         " *    \n" +
                         "      \n" +
@@ -197,8 +196,8 @@ public class ImageUtils {
     }
 
     public static void showArr(char[][] arr) {
-        for (int i = 0; i<arr.length; i++) {
-            for (int j = 0; j<arr[i].length; j++) {
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr[i].length; j++) {
                 System.out.print(arr[i][j]);
             }
             System.out.println();
@@ -206,8 +205,8 @@ public class ImageUtils {
     }
 
     public static void showArr(Character[][] arr) {
-        for (int i = 0; i<arr.length; i++) {
-            for (int j = 0; j<arr[i].length; j++) {
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr[i].length; j++) {
                 System.out.print(arr[i][j]);
             }
             System.out.println();
@@ -217,7 +216,7 @@ public class ImageUtils {
     public static Image imageFromString(String s) {
         String[] img1Strings = s.split("\n");
         char[][] image1Chars = new char[img1Strings.length][img1Strings[0].length()];
-        for (int i = 0; i<img1Strings.length; i++) {
+        for (int i = 0; i < img1Strings.length; i++) {
             char[] chars = img1Strings[i].toCharArray();
             image1Chars[i] = chars;
         }
@@ -226,8 +225,8 @@ public class ImageUtils {
 
     public static String asString(Character[][] arr, boolean withNewLine) {
         clearStringBuilder();
-        for (int i = 0; i<arr.length; i++) {
-            for (int j = 0; j<arr[i].length; j++) {
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr[i].length; j++) {
                 sb.append(arr[i][j]);
             }
             if (withNewLine) {
@@ -238,6 +237,6 @@ public class ImageUtils {
     }
 
     private static void clearStringBuilder() {
-        sb.delete(0,sb.length());
+        sb.delete(0, sb.length());
     }
 }

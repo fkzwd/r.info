@@ -22,7 +22,7 @@ public class Animation {
     public Image getImageAndNext() {
         Image image = getImage();
         currImage++;
-        currImage = currImage%images.size();
+        currImage = currImage % images.size();
         return image;
     }
 

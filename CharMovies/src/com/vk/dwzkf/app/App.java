@@ -15,14 +15,11 @@ public class App {
         App app = new App();
         if (animation.equals("man")) {
             app.testConsoleMan();
-        }
-        else if (animation.equals("car")) {
+        } else if (animation.equals("car")) {
             app.testConsoleCar();
-        }
-        else if (animation.equals("snow")) {
+        } else if (animation.equals("snow")) {
             app.testSnow();
-        }
-        else {
+        } else {
             System.out.println("Add arg man/car/snow to program and run");
         }
     }
@@ -52,7 +49,7 @@ public class App {
         int iterations = 1000;
         Screen screen = new Screen(50, 10, 1);
         screen.setAnimation(ImageUtils.getAnimationMan());
-        screen.setIterationsForStep(screen.getAnimation().imagesCount()/5);
+        screen.setIterationsForStep(screen.getAnimation().imagesCount() / 5);
         screen.setShowOnePictureTimes(25 / screen.getAnimation().imagesCount());
         testScreenAnimation(screen, sleepTime, iterations);
     }

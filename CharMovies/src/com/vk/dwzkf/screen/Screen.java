@@ -22,7 +22,7 @@ public class Screen {
     private int counter = 0;
 
     public Screen(int width, int height, int borderSize) {
-        screen = new Character[height+borderSize*2][width];
+        screen = new Character[height + borderSize * 2][width];
         BORDER_SIZE = borderSize;
         BORDER_TOP = BORDER_SIZE;
         BORDER_BOT = BORDER_SIZE;
@@ -67,25 +67,25 @@ public class Screen {
         Image m = animation.getImage();
         if (counter == showOnePictureTimes) {
             m = animation.getImageAndNext();
-            counter=0;
+            counter = 0;
         }
         position = position % screen[0].length;
 
         char[][] img = m.getImage();
-        for (int i = 0; i< screen.length; i++) {
-            for (int j = 0; j< screen[i].length; j++) {
+        for (int i = 0; i < screen.length; i++) {
+            for (int j = 0; j < screen[i].length; j++) {
                 screen[i][j] = ' ';
             }
         }
-        for (int i = 0; i<img.length; i++) {
-            for (int j = 0; j<img[i].length; j++) {
-                int x = ((int)position+j) % screen[0].length;
+        for (int i = 0; i < img.length; i++) {
+            for (int j = 0; j < img[i].length; j++) {
+                int x = ((int) position + j) % screen[0].length;
                 int y = i;
                 y = y % getHeight() + BORDER_TOP;
                 screen[y][x] = img[i][j];
             }
         }
-        if (iterationsForStep!=0) {
+        if (iterationsForStep != 0) {
             position += 1.0 / iterationsForStep;
         }
         return screen;
