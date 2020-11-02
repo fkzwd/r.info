@@ -19,9 +19,24 @@ public class App {
             app.testConsoleCar();
         } else if (animation.equals("snow")) {
             app.testSnow();
-        } else {
+        } else if (animation.equals("tank")) {
+            app.testTank();
+        }
+        else {
             System.out.println("Add arg man/car/snow to program and run");
         }
+    }
+
+    private void testTank() throws Exception {
+        int sleepTime = 11;
+        int iterations = 10000;
+        Screen screen = new Screen(140, 15, 1);
+        screen.setAnimation(ImageUtils.getAnimationTank());
+        screen.setIterationsForStep(4);
+        screen.setShowOnePictureTimes(5);
+        screen.setMovingMode(Screen.MOVING_LEFT);
+        screen.fillLineXStatic(screen.getAnimation().getCharsImage().length, '─');
+        testScreenAnimation(screen, sleepTime, iterations);
     }
 
     private void testSnow() throws Exception {
