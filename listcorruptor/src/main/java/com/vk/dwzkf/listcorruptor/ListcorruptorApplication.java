@@ -2,7 +2,6 @@ package com.vk.dwzkf.listcorruptor;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import sun.misc.Unsafe;
 
@@ -15,10 +14,10 @@ import java.util.concurrent.CountDownLatch;
 public class ListcorruptorApplication {
     public static class Remover implements Runnable {
         CountDownLatch cdl;
-        java.util.LinkedList<String> list;
+        SimpleLinkedList<String> list;
         String toRemove;
 
-        public Remover(CountDownLatch cdl, java.util.LinkedList<String> list, String toRemove) {
+        public Remover(CountDownLatch cdl, SimpleLinkedList<String> list, String toRemove) {
             this.cdl = cdl;
             this.list = list;
             this.toRemove = toRemove;
@@ -37,10 +36,10 @@ public class ListcorruptorApplication {
 
     public static class MyRemover implements Runnable {
         CountDownLatch cdl;
-        LinkedList<String> list;
+        CorruptedLinkedList<String> list;
         String toRemove;
 
-        public MyRemover(CountDownLatch cdl, LinkedList<String> list, String toRemove) {
+        public MyRemover(CountDownLatch cdl, CorruptedLinkedList<String> list, String toRemove) {
             this.cdl = cdl;
             this.list = list;
             this.toRemove = toRemove;
@@ -77,14 +76,14 @@ public class ListcorruptorApplication {
         testSimpleList();
         System.out.println();
         log.info("Corrupted list:");
-        testMySimpleList();
+        testCorruptedList();
     }
 
     @SneakyThrows
     public static void testSimpleList() {
         int size = 2;
         Random r = new Random();
-        java.util.LinkedList<String> list = new java.util.LinkedList<>();
+        SimpleLinkedList<String> list = new SimpleLinkedList<>();
         for (int index = 0; index < size; index++) {
             list.add(String.valueOf(r.nextLong()));
         }
@@ -104,10 +103,10 @@ public class ListcorruptorApplication {
     }
 
     @SneakyThrows
-    public static void testMySimpleList() {
+    public static void testCorruptedList() {
         int size = 2;
         Random r = new Random();
-        LinkedList<String> list = new LinkedList<>();
+        CorruptedLinkedList<String> list = new CorruptedLinkedList<>();
         for (int index = 0; index < size; index++) {
             list.add(String.valueOf(r.nextLong()));
         }
