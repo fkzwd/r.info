@@ -89,9 +89,9 @@ public class ListcorruptorApplication {
         }
         CountDownLatch cdl = new CountDownLatch(1);
         list.forEach(s -> new Thread(new Remover(cdl, list, s)).start());
-        Thread.sleep(300);
+        Thread.sleep(1000);
         cdl.countDown();
-        Thread.sleep(300);
+        Thread.sleep(1000);
         log.info("List size: {}", list.size());
         log.info("List: {}", list);
         Field first = list.getClass().getDeclaredField("first");
@@ -111,8 +111,10 @@ public class ListcorruptorApplication {
             list.add(String.valueOf(r.nextLong()));
         }
         CountDownLatch cdl = new CountDownLatch(1);
+        log.info("List First Node: {}", list.first);
+        log.info("List Last Node: {}", list.last);
         list.forEach(s -> new Thread(new MyRemover(cdl, list, s)).start());
-        Thread.sleep(300);
+        Thread.sleep(1000);
         cdl.countDown();
         Thread.sleep(2000);
         log.info("List size: {}", list.size());
