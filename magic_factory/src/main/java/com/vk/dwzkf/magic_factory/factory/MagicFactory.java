@@ -2,119 +2,114 @@ package com.vk.dwzkf.magic_factory.factory;
 
 import com.vk.dwzkf.magic_factory.annotation.FactoryIgnore;
 import com.vk.dwzkf.magic_factory.annotation.Transformable;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.vk.dwzkf.magic_factory.util.CodeUtil.not;
 import static com.vk.dwzkf.magic_factory.util.ConditionUtil.condition;
-import static com.vk.dwzkf.magic_factory.util.CodeUtil.*;
 
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class MagicFactory {
-    private static final Predicate<String> getterPredicate = (s) -> condition(s.startsWith("get"))
-            .or(s.startsWith("is"))
-            .get();
-    private static final Predicate<String> setterPredicate = (s) -> condition(s.startsWith("set"))
-            .get();
-
     private final ApplicationContext applicationContext;
     private final Map<Class<?>, Class<?>> transformableClasses = new HashMap<>();
 
+    private final Map<Class<?>, Map<String, Field>> instanceFieldMap = new HashMap<>();
+    private final Map<Class<?>, Map<String, Field>> argObjectFieldMap = new HashMap<>();
+    private final Map<Class<?>, Object> classToObject = new HashMap<>();
     @Autowired
     public void register(List<Object> beans) {
         beans.stream().filter(b -> checkAnnotated(b) != null)
                 .forEach(o -> {
                     transformableClasses.put(o.getClass().getAnnotation(Transformable.class).value(), o.getClass());
                 });
-
     }
 
     public <T> T getInstance(Object o) {
-        Class<?> instanceClass = checkIsTransformable(o);
+        Class<?> instanceClass = transformableClasses.get(o.getClass());
         if (instanceClass != null) {
-            Object instanceObject = applicationContext.getBean(instanceClass);
-            List<Field> instanceFields = getTargetFields(instanceObject);
-            List<Field> argObjectFields = getTargetFields(o);
+            Object instanceObject = classToObject.get(instanceClass);
+            Map<String, Field> instanceFieldMap;
+            Map<String, Field> argObjectFieldMap;
 
-            Map<FieldWrapper, Method> gettersMap = new HashMap<>();
-            argObjectFields.forEach(f -> {
-                Method m = getGetter(o, f);
-                if (m != null) {
-                    gettersMap.put(FieldWrapper.of(f),m);
-                }
-            });
 
-            Map<FieldWrapper, Method> settersMap = new HashMap<>();
-            instanceFields.forEach(f -> {
-                Method m = getSetter(instanceObject, f);
-                if (m != null) {
-                    settersMap.put(FieldWrapper.of(f),m);
-                }
-            });
+            if (classToObject.get(instanceClass) == null) {
+                instanceObject = applicationContext.getBean(instanceClass);
+                classToObject.put(instanceClass, instanceObject);
+            } else {
+                instanceObject = clone(instanceObject);
+            }
+            if (this.instanceFieldMap.get(instanceClass) == null) {
+                instanceFieldMap = getTargetFields(instanceObject)
+                        .stream()
+                        .collect(Collectors.toMap(Field::getName, f -> f));
+                argObjectFieldMap = getTargetFields(o)
+                        .stream()
+                        .collect(Collectors.toMap(Field::getName, f -> f));
 
-            gettersMap.forEach((w, m) -> {
-                if (settersMap.containsKey(w)) {
+                this.instanceFieldMap.put(instanceClass, instanceFieldMap);
+                this.argObjectFieldMap.put(o.getClass(), argObjectFieldMap);
+            } else {
+                instanceFieldMap = this.instanceFieldMap.get(instanceClass);
+                argObjectFieldMap = this.argObjectFieldMap.get(o.getClass());
+            }
+
+            Object finalInstanceObject = instanceObject;
+            instanceFieldMap.forEach((name, field) -> {
+                Field f = argObjectFieldMap.get(name);
+                if (f != null) {
                     try {
-                        Method setter = settersMap.get(w);
-                        Object ret = m.invoke(o);
-                        setter.invoke(instanceObject, ret);
-                    } catch (Exception e) {
-                        log.error("Error while executing {} on'{}' or/and '{}' on'{}'",
-                                m,o,instanceClass, settersMap.get(w)
-                        );
+                        f.setAccessible(true);
+                        field.setAccessible(true);
+                        field.set(finalInstanceObject, f.get(o));
+                        field.setAccessible(false);
+                        f.setAccessible(false);
+                    } catch (IllegalAccessException e) {
+                        log.error("Error while setting field {} of {} to {} from {}",
+                                name, finalInstanceObject, f.getName(), o);
+                        e.printStackTrace();
                     }
                 }
             });
+
             return (T) instanceObject;
         }
         throw new IllegalArgumentException("Object '"+o.toString()+"' have no Annotation @Transformable");
     }
 
-    @Getter
-    @Setter
-    private static class FieldWrapper {
-        private Field field;
-        private String methodName;
-
-        public FieldWrapper(Field field) {
-            this.field = field;
-            this.methodName = field.getName().toLowerCase();
+    private Object clone(Object o) {
+        Constructor<?> c = o.getClass().getConstructors()[0];
+        c.setAccessible(true);
+        int parameterCount = c.getParameterCount();
+        Object[] args = new Object[parameterCount];
+        try {
+            Object instance = c.newInstance(args);
+            c.setAccessible(false);
+            Field[] instanceFields = instance.getClass().getDeclaredFields();
+            for (Field field : instanceFields) {
+                if ((field.getModifiers() & Modifier.FINAL) != 0) {
+                    field.setAccessible(true);
+                    field.set(instance, field.get(o));
+                    field.setAccessible(false);
+                }
+            }
+            return instance;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
         }
-
-        public static FieldWrapper of(Field field) {
-            return new FieldWrapper(field);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            FieldWrapper that = (FieldWrapper) o;
-            return Objects.equals(methodName, that.methodName);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(methodName);
-        }
-    }
-
-    private Class<?> checkIsTransformable(Object o) {
-        return transformableClasses.get(o.getClass());
+        throw new IllegalArgumentException();
     }
 
     private Transformable checkAnnotated(Object o) {
@@ -138,49 +133,5 @@ public class MagicFactory {
                 .collect(Collectors.toList());
         fields.addAll(getTargetFields(o.getSuperclass()));
         return fields;
-    }
-
-    private Method getGetter(Object o, Field f) {
-        return getFieldAccessor(o, f, getterPredicate, 0, f.getType());
-    }
-
-    private Method getSetter(Object o, Field f) {
-        return getFieldAccessor(o, f, setterPredicate, 1, null);
-    }
-
-    private Method getFieldAccessor(Object o, Field f, Predicate<String> prefixPredicate,
-                                    int paramCount, Class<?> returnType) {
-        return getFieldAccessor(o.getClass(), f, prefixPredicate, paramCount, returnType);
-    }
-
-    private Method getFieldAccessor(Class<?> o, Field f, Predicate<String> prefixPredicate,
-                                    int paramCount, Class<?> returnType) {
-        if (o == Object.class) return null;
-        for (Method m : o.getDeclaredMethods()) {
-            if (condition(checkMethodName(m,f))
-                    .and(prefixPredicate.test(m.getName()))
-                    .and((m.getModifiers() & Modifier.PUBLIC) != 0)
-                    .and(condition(returnType==null)
-                            .or(returnType==m.getReturnType())
-                    )
-                    .and(m.getParameterCount() == paramCount)
-                    .get()
-
-            ) {
-                return m;
-            }
-        }
-        return getFieldAccessor(o.getSuperclass(), f, prefixPredicate, paramCount, returnType);
-    }
-
-    private boolean checkMethodName(Method m, Field f) {
-        if (f.getType() == boolean.class || f.getType() == Boolean.class) {
-            if (f.getName().startsWith("is") && f.getName().length()>2) {
-                return m.getName().toLowerCase().endsWith(f.getName().substring(2).toLowerCase());
-            }
-        }
-        return m.getName()
-                .toLowerCase()
-                .endsWith(f.getName().toLowerCase());
     }
 }
