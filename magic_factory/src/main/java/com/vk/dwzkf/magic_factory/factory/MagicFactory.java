@@ -29,6 +29,7 @@ public class MagicFactory {
     private final Map<Class<?>, Map<String, Field>> instanceFieldMap = new HashMap<>();
     private final Map<Class<?>, Map<String, Field>> argObjectFieldMap = new HashMap<>();
     private final Map<Class<?>, Object> classToObject = new HashMap<>();
+
     @Autowired
     public void register(List<Object> beans) {
         beans.stream().filter(b -> checkAnnotated(b) != null)
@@ -127,8 +128,7 @@ public class MagicFactory {
     private List<Field> getTargetFields(Class<?> o) {
         if (o == Object.class) return Collections.emptyList();
         List<Field> fields = Arrays.stream(o.getDeclaredFields())
-                .filter(f -> condition(not(f.isAnnotationPresent(FactoryIgnore.class)))
-                        .get()
+                .filter(f -> not(f.isAnnotationPresent(FactoryIgnore.class))
                 )
                 .collect(Collectors.toList());
         fields.addAll(getTargetFields(o.getSuperclass()));
