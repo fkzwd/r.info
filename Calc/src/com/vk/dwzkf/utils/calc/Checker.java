@@ -42,10 +42,10 @@ public class Checker {
                 return check(chars, i+1, getCharMode(chars[i]), openHooks+1, 0);
             }
             if (contains(delimiters, chars[i])) {
-                return check(chars, i+1, getCharMode(chars[i]), openHooks+1, delimeters+1);
+                return check(chars, i+1, getCharMode(chars[i]), openHooks, delimeters+1);
             }
             if (contains(digits, chars[i])) {
-                return check(chars, i+1, getCharMode(chars[i]), openHooks+1, delimeters);
+                return check(chars, i+1, getCharMode(chars[i]), openHooks, delimeters);
             }
             return check(chars, i+1, getCharMode(chars[i]), openHooks, 0);
         }
