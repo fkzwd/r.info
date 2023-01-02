@@ -1,6 +1,7 @@
 package com.vk.dwzkf.utils.calc;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Checker {
     private static final char[] MATH_OPERATIONS = {'+','-','/','*','^'};                //1  --  1
@@ -193,16 +194,26 @@ public class Checker {
     }
 
     public boolean check(char[] chars, int i, int mode, int openHooks, int delimeters) {
-        if (mode==-1) return false;
-        if (openHooks<0) return false;
-        if (delimeters>1) return false;
+        if (mode==-1) {
+            return false;
+        }
+        if (openHooks<0) {
+            return false;
+        }
+        if (delimeters>1) {
+            return false;
+        }
         if (i >=chars.length) {
-            if (mode != EXIT_MODE_1 && mode != EXIT_MODE_2) return false;
+            if (mode != EXIT_MODE_1 && mode != EXIT_MODE_2) {
+                return false;
+            }
             else return true;
         }
         else {
             boolean result = isAvailable(chars[i], mode);
-            if (!result) return false;
+            if (!result) {
+                return false;
+            }
             if (contains(CLOSE_HOOK,chars[i])) {
                 return check(chars, i+1, getCharMode(chars[i]), openHooks-1, 0);
             }
@@ -230,10 +241,11 @@ public class Checker {
 
     public boolean isAvailable(char c, int mode) {
         boolean result = false;
-        for (int i = 0; i < maskMapping.size(); i++) {
-            int currMode = 1 << (i + 1);
-            if ((mode & currMode) != 0)
-                result = result || contains(maskMapping.get(currMode), c);
+        List<Integer> modes = maskMapping.keySet().stream()
+                .filter(k -> (k & mode) != 0)
+                .collect(Collectors.toList());
+        for (Integer modeKey : modes) {
+            result = result || contains(maskMapping.get(modeKey), c);
         }
         return result;
     }
@@ -248,9 +260,8 @@ public class Checker {
     public String removeBlanks(String s) {
         StringBuilder sb = new StringBuilder();
         for (char c : s.toCharArray()) {
-            if (contains(DIGITS,c) || contains(DELIMITERS,c) || contains(HOOKS,c) || contains(MATH_OPERATIONS,c)) {
-                sb.append(c);
-            }
+           if (c == ' ' || c <= 13) continue;
+           sb.append(c);
         }
         return sb.toString();
     }
